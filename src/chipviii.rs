@@ -105,6 +105,7 @@ pub struct ChipVIIIState {
     pub wait_for_key: Option<u8>,
 
     last_timer_tick: Instant,
+    last_cycle_time: Instant,
     pub cycles_per_second: u32,
 }
 
@@ -124,6 +125,7 @@ impl ChipVIIIState {
             draw_flag: false,
             wait_for_key: None,
             last_timer_tick: Instant::now(),
+            last_cycle_time: Instant::now(),
             cycles_per_second: 500,
         };
 
@@ -189,9 +191,20 @@ impl ChipVIIIState {
     }
 
     pub fn run_cycle(&mut self) {
-        if self.wait_for_key.is_none() {
-            self.cycle();
+        let now = Instant::now();
+        let elapsed = now.duration_since(self.last_cycle_time);
+        let cycles_to_run = (elapsed.as_secs_f64() * self.cycles_per_second as f64).floor() as u32;
+
+        for _ in 0..cycles_to_run {
+            if self.wait_for_key.is_none() {
+                self.cycle();
+            }
         }
+
+        if cycles_to_run > 0 {
+            self.last_cycle_time = now;
+        }
+
         self.update_timers_real_time();
     }
 
