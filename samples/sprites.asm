@@ -1,0 +1,28 @@
+LD V0, 10
+LD V1, 10
+LD V2, 20
+LD V3, 30
+
+LD I, BOX
+DRW V0, V1, 3
+
+LD V0, 20
+LD I, BOX
+DRW V0, V1, 3
+
+LD V0, 30
+LD I, H_SHAPE
+DRW V0, V1, 3
+
+HALT:
+    JP HALT
+
+BOX:
+    DB 0xFF
+    DB 0x81
+    DB 0xFF
+
+H_SHAPE:
+    DB 0x81
+    DB 0xFF
+    DB 0x81

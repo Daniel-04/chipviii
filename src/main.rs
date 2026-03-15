@@ -1,17 +1,48 @@
+mod assembler;
 mod chipviii;
-use crate::chipviii::{ChipVIIIState, DISPLAY_HEIGHT, DISPLAY_WIDTH, SCALE};
 
+use crate::assembler::Assembler;
+use crate::chipviii::{ChipVIIIState, DISPLAY_HEIGHT, DISPLAY_WIDTH, SCALE};
 use raylib::prelude::*;
+use std::env;
+use std::fs;
 use std::time::{Duration, Instant};
 
 fn main() {
+    let args: Vec<String> = env::args().collect();
+
+    if args.len() == 4 && args[1] == "assemble" {
+        assemble(&args[2], &args[3]);
+    } else if args.len() == 2 && args[1] != "assemble" {
+        emulate(&args[1]);
+    } else {
+        println!("Usage:");
+        println!("\tRun ROM:\t{} <path.ch8>", args[0]);
+        println!("\tAssemble:\t{} assemble <input.asm> <output.ch8>", args[0]);
+    }
+}
+
+fn assemble(src: &str, bin: &str) {
+    let source = fs::read_to_string(src).expect("Unable to read source file");
+    let mut asm = Assembler::new();
+
+    match asm.assemble(&source) {
+        Ok(binary) => {
+            fs::write(bin, binary).expect("Unable to write binary");
+            println!("Sssembled {} to {}", src, bin);
+        }
+        Err(e) => eprintln!("Assembly Error: {}", e),
+    }
+}
+
+fn emulate(bin: &str) {
     let (mut rl, thread) = raylib::init()
         .size(DISPLAY_WIDTH as i32 * SCALE, DISPLAY_HEIGHT as i32 * SCALE)
         .title("CHIP-8 Emulator")
         .build();
 
     let mut chip8 = ChipVIIIState::new();
-    chip8.read_rom("breakout.ch8");
+    chip8.read_rom(bin);
 
     let mut last_cycle = Instant::now();
     let cycle_delay = Duration::from_micros(1_000_000 / chip8.cycles_per_second as u64);
